@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Absensi Siswa</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#eef2ff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:#fff;padding:20px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.08);width:95%;max-width:420px}
+    input,select,button{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ccc;font-size:15px}
+    button{background:#4a4ae9;color:#fff;border:none;cursor:pointer}
+    #status{margin-top:10px;font-weight:600}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3>Form Absensi</h3>
+    <input id="nama" placeholder="Nama" />
+    <input id="nis" placeholder="NIS" />
+    <select id="jenis">
+      <option value="">Pilih Jenis Kelamin</option>
+      <option value="Laki-laki">Laki-laki</option>
+      <option value="Perempuan">Perempuan</option>
+    </select>
+    <input id="kelas" placeholder="Kelas" />
+    <button id="submitBtn">Kirim</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // GANTI INI DENGAN URL /exec MILIKMU
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaP5s6Z3eRpukTgu0hT9mRu-CHsWTNU_ZoP5zAcHu3IBB54W5LVCZmiZtb7JCKOwMH/exec";
+
+    const statusEl = document.getElementById('status');
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      statusEl.textContent = "";
+      const nama = document.getElementById('nama').value.trim();
+      const nis = document.getElementById('nis').value.trim();
+      const jenis = document.getElementById('jenis').value;
+      const kelas = document.getElementById('kelas').value.trim();
+
+      if(!nama || !nis || !jenis || !kelas) {
+        alert('Isi semua field!');
+        return;
+      }
+
+      // Menggunakan URLSearchParams => dikirim sebagai form-urlencoded
+      const params = new URLSearchParams();
+      params.append('nama', nama);
+      params.append('nis', nis);
+      params.append('jenis_kelamin', jenis);
+      params.append('kelas', kelas);
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+          },
+          body: params.toString()
+        });
+
+        // Baca respon sebagai text, lalu coba parse JSON
+        const txt = await res.text();
+        let json;
+        try { json = JSON.parse(txt); } catch(e) { json = { message: txt }; }
+
+        if (res.ok) {
+          statusEl.style.color = 'green';
+          statusEl.textContent = json.message || 'Berhasil';
+          // reset form
+          document.getElementById('nama').value = '';
+          document.getElementById('nis').value = '';
+          document.getElementById('jenis').selectedIndex = 0;
+          document.getElementById('kelas').value = '';
+        } else {
+          statusEl.style.color = 'red';
+          statusEl.textContent = json.message || 'Gagal: HTTP ' + res.status;
+        }
+
+      } catch (err) {
+        console.error(err);
+        statusEl.style.color = 'red';
+        statusEl.textContent = 'Gagal mengirim: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
